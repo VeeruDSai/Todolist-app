@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        // Define your Azure Container Registry or Docker Hub credentials here
-        DOCKER_REGISTRY = 'yourregistry.azurecr.io' // Replace with your actual registry
-        IMAGE_NAME = 'todolist-app'
+        // Define your Docker Hub credentials ID here
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
+        IMAGE_NAME = 'veerudsai/todolist-app'
         IMAGE_TAG = "${env.BUILD_ID}"
         // SonarQube installation name defined in Jenkins
         SONAR_SCANNER_HOME = tool 'SonarQubeScanner'
@@ -44,7 +44,7 @@ pipeline {
                 echo 'Building Docker Image...'
                 script {
                     // Build the Docker image
-                    dockerImage = docker.build("${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}")
+                    dockerImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
                 }
             }
         }
@@ -53,8 +53,8 @@ pipeline {
             steps {
                 echo 'Pushing Docker Image to Registry...'
                 script {
-                    // Ensure you have configured 'azure-acr-credentials' or 'docker-hub-credentials' in Jenkins
-                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'azure-acr-credentials') {
+                    // Ensure you have configured 'docker-hub-credentials' in Jenkins
+                    docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
                         dockerImage.push()
                         dockerImage.push('latest') // Also tag and push as latest
                     }
