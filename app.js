@@ -89,7 +89,7 @@ app.get("/", function (req, res) {
 });
 
 // Route for adding new items
-app.post("/", function (req, res) {
+app.post("/", async function (req, res) {
   const itemName = req.body.newItem;
   const listName = req.body.list;
   const itemPriority = req.body.priority || "Normal";
@@ -103,34 +103,24 @@ app.post("/", function (req, res) {
       status: "Pending"
     });
 
-    if (listName === "Today") {
-      // Save the item to the default collection
-      item.save();
-      res.redirect("/");
-    } else {
-      // Find the custom list and push the new item
-      List.findOne({ name: listName })
-        .then((foundItems) => {
-          foundItems.items.push(item);
-          foundItems.save();
-          res.redirect("/" + listName);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+    try {
+      if (listName === "Today") {
+        await item.save();
+        res.redirect("/");
+      } else {
+        const foundList = await List.findOne({ name: listName });
+        if (foundList) {
+          foundList.items.push(item);
+          await foundList.save();
+        }
+        res.redirect("/" + listName);
+      }
+    } catch (err) {
+      console.log(err);
+      res.redirect(listName === "Today" ? "/" : "/" + listName);
     }
   } else {
-    if (listName === "Today") {
-      res.redirect("/");
-    } else {
-      List.findOne({ name: listName })
-        .then((foundItems) => {
-          res.redirect("/" + listName);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }
+    res.redirect(listName === "Today" ? "/" : "/" + listName);
   }
 });
 
