@@ -26,19 +26,21 @@ pipeline {
                 // Run npm audit. Using --audit-level=high so it doesn't fail on minor issues.
                 bat 'npm audit --audit-level=high'
 
-                echo 'Running OWASP Dependency-Check...'
-                // Requires the OWASP Dependency-Check Jenkins plugin to be installed.
-                // If the plugin is missing, this step is skipped gracefully.
-                script {
-                    try {
-                        dependencyCheck additionalArguments: '--scan ./ --format XML --format HTML --out dependency-check-report', odcInstallation: 'OWASP-Dependency-Check'
-                        dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.xml'
-                    } catch (err) {
-                        echo "WARNING: OWASP Dependency-Check skipped — plugin not installed or tool not configured."
-                        echo "Install the 'OWASP Dependency-Check' Jenkins plugin to enable this step."
-                        unstable(message: 'OWASP Dependency-Check plugin not available')
-                    }
-                }
+                echo 'Running OWASP Dependency-Check CLI...'
+                // Run OWASP Dependency-Check using the local CLI tool.
+                // If the CLI is not present, it is downloaded dynamically.
+                bat '''
+                    @echo off
+                    if not exist "C:\\ProgramData\\dependency-check\\bin\\dependency-check.bat" (
+                        echo Downloading Dependency-Check CLI...
+                        powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://github.com/dependency-check/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip' -OutFile 'C:\\ProgramData\\dependency-check.zip'"
+                        echo Extracting Dependency-Check CLI...
+                        powershell -Command "Expand-Archive -Path 'C:\\ProgramData\\dependency-check.zip' -DestinationPath 'C:\\ProgramData' -Force"
+                        del "C:\\ProgramData\\dependency-check.zip"
+                    )
+                    echo Running Dependency-Check Analysis...
+                    "C:\\ProgramData\\dependency-check\\bin\\dependency-check.bat" --scan ./ --format XML --format HTML --out dependency-check-report --project To-Do-List-App
+                '''
             }
         }
 
