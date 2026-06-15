@@ -80,21 +80,8 @@ app.get("/", function (req, res) {
   // Find all items in the collection
   Item.find({})
     .then((foundItems) => {
-      if (foundItems.length === 0) {
-        // Insert default items if the collection is empty
-        Item.insertMany(defaultItems)
-          .then(() => {
-            console.log("Default items inserted");
-            // Redirect to the home page to display the default items
-            res.redirect("/");
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-      } else {
-        // Render the home page and pass the found items
-        res.render("list", { listTitle: "Today", newListItems: foundItems });
-      }
+      // Render the home page and pass the found items
+      res.render("list", { listTitle: "Today", newListItems: foundItems });
     })
     .catch((error) => {
       console.log(error);
@@ -215,7 +202,7 @@ app.get("/:customListName", function (req, res) {
         // Create a new list if it doesn't exist
         const list = new List({
           name: customListName,
-          items: defaultItems,
+          items: [],
         });
 
         list.save();
