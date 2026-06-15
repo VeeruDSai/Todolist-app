@@ -80,21 +80,8 @@ app.get("/", function (req, res) {
   // Find all items in the collection
   Item.find({})
     .then((foundItems) => {
-      if (foundItems.length === 0) {
-        // Insert default items if the collection is empty
-        Item.insertMany(defaultItems)
-          .then(() => {
-            console.log("Default items inserted");
-            // Redirect to the home page to display the default items
-            res.redirect("/");
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-      } else {
-        // Render the home page and pass the found items
-        res.render("list", { listTitle: "Today", newListItems: foundItems });
-      }
+      // Render the home page and pass the found items
+      res.render("list", { listTitle: "Today", newListItems: foundItems });
     })
     .catch((error) => {
       console.log(error);
@@ -102,7 +89,7 @@ app.get("/", function (req, res) {
 });
 
 // Route for adding new items
-app.post("/", function (req, res) {
+app.post("/", async function (req, res) {
   const itemName = req.body.newItem;
   const listName = req.body.list;
   const itemPriority = req.body.priority || "Normal";
@@ -116,34 +103,24 @@ app.post("/", function (req, res) {
       status: "Pending"
     });
 
-    if (listName === "Today") {
-      // Save the item to the default collection
-      item.save();
-      res.redirect("/");
-    } else {
-      // Find the custom list and push the new item
-      List.findOne({ name: listName })
-        .then((foundItems) => {
-          foundItems.items.push(item);
-          foundItems.save();
-          res.redirect("/" + listName);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+    try {
+      if (listName === "Today") {
+        await item.save();
+        res.redirect("/");
+      } else {
+        const foundList = await List.findOne({ name: listName });
+        if (foundList) {
+          foundList.items.push(item);
+          await foundList.save();
+        }
+        res.redirect("/" + listName);
+      }
+    } catch (err) {
+      console.log(err);
+      res.redirect(listName === "Today" ? "/" : "/" + listName);
     }
   } else {
-    if (listName === "Today") {
-      res.redirect("/");
-    } else {
-      List.findOne({ name: listName })
-        .then((foundItems) => {
-          res.redirect("/" + listName);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }
+    res.redirect(listName === "Today" ? "/" : "/" + listName);
   }
 });
 
@@ -215,7 +192,7 @@ app.get("/:customListName", function (req, res) {
         // Create a new list if it doesn't exist
         const list = new List({
           name: customListName,
-          items: defaultItems,
+          items: [],
         });
 
         list.save();
@@ -242,7 +219,7 @@ app.get("/about", function (req, res) {
 // Start the server
 if (process.env.NODE_ENV !== 'production') {
   app.listen(3000, function () {
-    console.log("Server started on port 3000.");
+    console.log("Server started on http://localhost:3000");
   });
 }
 
