@@ -33,36 +33,22 @@ mongoose.connect(DB, {
 const itemSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
+    require: true,
   },
-  status: {
-    type: String,
-    default: "Pending" // Pending, In Progress, Completed
-  },
-  priority: {
-    type: String,
-    default: "Normal" // Minor, Normal, Critical
-  }
 });
 
 const Item = new mongoose.model("Item", itemSchema);
 
 const item1 = new Item({
-  name: "Evaluate the addition and deletion of user IDs.",
-  status: "Pending",
-  priority: "Minor"
+  name: "Welcome to your TO DO LIST",
 });
 
 const item2 = new Item({
-  name: "Identify the implementation team.",
-  status: "In Progress",
-  priority: "Normal"
+  name: "Hit the + button to add a new item",
 });
 
 const item3 = new Item({
-  name: "Install console machines and prerequisite software.",
-  status: "Completed",
-  priority: "Critical"
+  name: "<---- Hit this to delete an item",
 });
 
 const defaultItems = [item1, item2, item3];
