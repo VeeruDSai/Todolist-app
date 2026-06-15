@@ -3,14 +3,16 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const _ = require("lodash");
+const path = require("path");
 
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
 // Set up mongoose connection local -- uncomment this if you are using it locally
 // mongoose.connect("mongodb://127.0.0.1:27017/todolistDB");
